@@ -1,6 +1,6 @@
 {
   "name": "nanogl-depth-texture",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "WEBGL_depth_texture support for nanogl",
   "main": "nanogl.js",
   "scripts": {
