@@ -20,7 +20,7 @@ function create( gl, opts ){
   var fbo = new Fbo( gl, opts );
   if( fbo.attachment.flags & 1 ) {
     var att = fbo.attachment;
-    fbo.attachment = new DepthStencilAttachment( fbo.attachment.flags | T_FLAG );
+    fbo.attachment = new DepthStencilAttachment( fbo, fbo.attachment.flags | T_FLAG );
     att.dispose();
   }
   return fbo;
