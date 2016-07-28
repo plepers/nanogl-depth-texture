@@ -35,7 +35,7 @@ describe( "Fbo", function(){
     testContext.assertNoError();
   });
 
-  it( "full init should leave clean state", function(){
+  it( "depth init should leave clean state", function(){
     var fbo = Fbo.create( gl, {
       stencil : true,
       depth : true
@@ -44,15 +44,17 @@ describe( "Fbo", function(){
     testContext.assertNoError();
   });
 
-  it( "full creation should resize", function(){
+
+  it( "depth+stencil should leave clean state", function(){
     var fbo = Fbo.create( gl, {
       stencil : true,
       depth : true
     } );
-    fbo.resize( 64, 64 );
-    expect( fbo.valid ).to.be.ok()
+    fbo.resize( 32, 32 );
     testContext.assertNoError();
   });
+
+
 
   it( "should be valid", function(){
     var fbo = Fbo.create( gl, {
