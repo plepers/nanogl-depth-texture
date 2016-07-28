@@ -36,6 +36,6 @@
     "when": "^3.7.7"
   },
   "dependencies": {
-    "nanogl": "0.3.0"
+    "nanogl": "0.3.1"
   }
 }
