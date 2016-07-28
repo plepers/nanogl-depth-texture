@@ -50,7 +50,7 @@ function DepthStencilAttachment( fbo, flags ){
                         gl.getExtension( 'MOZ_WEBGL_depth_texture' );
 
     if( this._depthTexExt === null ){
-      this.flags = this.flags | ~T_FLAG;
+      this.flags = this.flags & ~T_FLAG;
     }
   }
 }
