@@ -49,8 +49,9 @@ function DepthStencilAttachment( fbo, flags ){
                         gl.getExtension( 'WEBKIT_WEBGL_depth_texture' ) ||
                         gl.getExtension( 'MOZ_WEBGL_depth_texture' );
 
-    if( this._depthTexExt === null ){
-      this.flags = this.flags & ~T_FLAG;
+    // no depth texture extension and not webgl2
+    if( this._depthTexExt === null && gl.UNSIGNED_INT_24_8 !== 0x84FA ){
+      this.flags = (this.flags & ~T_FLAG)>>>0;
     }
   }
 }
@@ -64,8 +65,14 @@ DepthStencilAttachment.prototype = {
     var depth = null;
 
     if( this.flags & T_FLAG ){
-      depth = new Texture( gl, getTextureFormat( gl, attType ) );
-      depth.fromData( this.fbo.width, this.fbo.height, null, getTextureInternalFormat( gl, attType ) );
+
+      depth = new Texture( gl, 
+        getTextureFormat  ( gl, attType ), 
+        getTextureType    ( gl, attType ),
+        getTextureInternal( gl, attType )
+      );
+
+      depth.fromData( this.fbo.width, this.fbo.height, null );
 
       if( gl.getError() === gl.INVALID_VALUE ){
         // depth texture not supported
@@ -75,12 +82,12 @@ DepthStencilAttachment.prototype = {
         return;
       }
 
-      gl.framebufferTexture2D( gl.FRAMEBUFFER, getAttachmentType( gl, attType ), gl.TEXTURE_2D, depth.id, 0 );
+      gl.framebufferTexture2D( gl.FRAMEBUFFER, getAttachment( gl, attType ), gl.TEXTURE_2D, depth.id, 0 );
 
     } else if( attType ){
       depth = gl.createRenderbuffer();
       gl.bindRenderbuffer(    gl.RENDERBUFFER,  depth );
-      gl.framebufferRenderbuffer( gl.FRAMEBUFFER, getAttachmentType( gl, attType ), gl.RENDERBUFFER, depth );
+      gl.framebufferRenderbuffer( gl.FRAMEBUFFER, getAttachment( gl, attType ), gl.RENDERBUFFER, depth );
     }
 
     this.buffer = depth;
@@ -95,10 +102,11 @@ DepthStencilAttachment.prototype = {
   _allocate : function(){
     var gl = this.fbo.gl;
     if( this.flags & T_FLAG ){
-      this.buffer.fromData( this.fbo.width, this.fbo.height, null, getTextureInternalFormat( gl, this.flags & 3 ) );
+      // this.buffer.type = getTextureType( gl, this.flags & 3 );
+      this.buffer.fromData( this.fbo.width, this.fbo.height, null );
     } else if( this.flags & 3 ){
       gl.bindRenderbuffer(    gl.RENDERBUFFER,  this.buffer );
-      gl.renderbufferStorage( gl.RENDERBUFFER,  getAttachmentFormat( gl, this.flags & 3 ) , this.fbo.width, this.fbo.height );
+      gl.renderbufferStorage( gl.RENDERBUFFER,  getRenderbufferStorage( gl, this.flags & 3 ) , this.fbo.width, this.fbo.height );
       gl.bindRenderbuffer(    gl.RENDERBUFFER,  null );
     }
   },
@@ -129,8 +137,9 @@ DepthStencilAttachment.prototype = {
 //                        Utilities
 //---------------------------------
 
+
 // renderbuffer format
-function getAttachmentFormat( gl, type ){
+function getRenderbufferStorage( gl, type ){
   switch( type ){
     case 1: return 0x81A5;  // DEPTH_COMPONENT16;
     case 2: return 0x8D48;  // STENCIL_INDEX8;
@@ -138,6 +147,18 @@ function getAttachmentFormat( gl, type ){
     default: throw new Error( 'unknown attachment type '+type );
   }
 }
+
+
+// depth texture internal format
+// must return undefined in webgl 1, so "internal" will match "format"
+function getTextureInternal( gl, type ){
+  switch( type ){
+    case 1: return gl.DEPTH_COMPONENT24;
+    case 3: return gl.DEPTH24_STENCIL8;
+    default: throw new Error( 'unknown texture type '+type );
+  }
+}
+
 
 // depth texture format
 function getTextureFormat( gl, type ){
@@ -148,8 +169,9 @@ function getTextureFormat( gl, type ){
   }
 }
 
-// depth texture internal format
-function getTextureInternalFormat( gl, type ){
+
+// depth texture type
+function getTextureType( gl, type ){
   switch( type ){
     case 1: return 0x1405;  // UNSIGNED_INT;
     case 3: return 0x84FA;  // UNSIGNED_INT_24_8_WEBGL (WEBGL_depth_texture extension)
@@ -158,7 +180,8 @@ function getTextureInternalFormat( gl, type ){
 }
 
 
-function getAttachmentType( gl, type ){
+// attachment point enum
+function getAttachment( gl, type ){
   switch( type ){
     case 1: return 0x8D00;  // DEPTH_ATTACHMENT
     case 2: return 0x8D20;  // STENCIL_ATTACHMENT;
@@ -166,7 +189,6 @@ function getAttachmentType( gl, type ){
     default: throw new Error( 'unknown attachment type '+type );
   }
 }
-
 
 
 
